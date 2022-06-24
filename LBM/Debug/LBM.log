@@ -1,0 +1,5 @@
+﻿main.obj : error LNK2019: unresolved external symbol "void __cdecl InitialiseDeviceFields(float *,float *,int *,int,float * *,float * *,int * *)" (?InitialiseDeviceFields@@YAXPAM0PAHHPAPAM2PAPAH@Z) referenced in function _main
+main.obj : error LNK2019: unresolved external symbol "void __cdecl FreeDeviceFields(float * *,float * *,int * *)" (?FreeDeviceFields@@YAXPAPAM0PAPAH@Z) referenced in function _main
+main.obj : error LNK2019: unresolved external symbol "void __cdecl CopyFieldsFromDevice(float *,float *,int,float * *,float * *)" (?CopyFieldsFromDevice@@YAXPAM0HPAPAM1@Z) referenced in function _main
+main.obj : error LNK2019: unresolved external symbol "void __cdecl DoIteration(float *,float *,int *,float,float *,int,float * *,float * *,int * *,float *)" (?DoIteration@@YAXPAM0PAHM0HPAPAM2PAPAH0@Z) referenced in function _main
+E:\GitHub\lbm-gpu\LBM\Debug\LBM.exe : fatal error LNK1120: 4 unresolved externals

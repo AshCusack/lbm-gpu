@@ -1,4 +1,4 @@
-#include "initialization_gpu.h"
+#include "initialization_gpu.cuh"
 #include "lbm_model.h"
 #include "utils_gpu.h"
 
