@@ -1,5 +1,7 @@
 #include <math.h>
 #include <stdio.h>
+#include <vector>
+#include <iostream>
 
 #include "lbm_solver_gpu.h"
 #include "lbm_model.h"
@@ -343,7 +345,9 @@ __global__ void TreatBoundary(int *flag_field_d){
  * Performs pointer swap on GPU.
  */
 __global__ void DoSwap(){
-	float *swap=collide_field_d; collide_field_d=stream_field_d; stream_field_d=swap;
+	float *swap=collide_field_d; 
+	collide_field_d=stream_field_d; 
+	stream_field_d=swap;
 }
 
 
@@ -352,37 +356,38 @@ void DoIteration(float *collide_field, float *stream_field, int *flag_field, flo
 		int **flag_field_d, float *mlups_sum){
 	int num_cells = pow(xlength+2, D_LBM);
 	clock_t mlups_time;
-
+	std::vector<int> time;
+	time.push_back(clock());
 	/* initialize constant data */
 	cudaErrorCheck(cudaMemcpyToSymbol(xlength_d, &xlength, sizeof(int), 0, cudaMemcpyHostToDevice));
 	cudaErrorCheck(cudaMemcpyToSymbol(num_cells_d, &num_cells, sizeof(int), 0, cudaMemcpyHostToDevice));
 	cudaErrorCheck(cudaMemcpyToSymbol(tau_d, &tau, sizeof(float), 0, cudaMemcpyHostToDevice));
 	cudaErrorCheck(cudaMemcpyToSymbol(wall_velocity_d, wall_velocity, D_LBM*sizeof(float), 0, cudaMemcpyHostToDevice));
-
+	time.push_back(clock());
 	cudaErrorCheck(cudaMemcpyToSymbol(collide_field_d, collide_field_dd, sizeof(*collide_field_dd), 0, cudaMemcpyHostToDevice));
 	cudaErrorCheck(cudaMemcpyToSymbol(stream_field_d, stream_field_dd, sizeof(*stream_field_dd), 0, cudaMemcpyHostToDevice));
-
+	time.push_back(clock());
 	/* define grid structure */
 	dim3 block(BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
 	dim3 grid((xlength+2+block.x-1)/block.x, (xlength+2+block.y-1)/block.y, (xlength+2+block.z-1)/block.z);
 
 	mlups_time = clock();
-
+	time.push_back(clock());
 	/* perform streaming */
 	DoStreaming<<<grid,block>>>();
 	cudaErrorCheck(cudaThreadSynchronize());
 	cudaErrorCheck(cudaPeekAtLastError());
-
+	time.push_back(clock());
 	/* Perform the swapping of collide and stream fields */
 	DoSwap<<<1,1>>>();
 	cudaErrorCheck(cudaThreadSynchronize());
 	cudaErrorCheck(cudaPeekAtLastError());
-
+	time.push_back(clock());
 	/* perform collision */
 	DoCollision<<<grid,block>>>();
 	cudaErrorCheck(cudaThreadSynchronize());
 	cudaErrorCheck(cudaPeekAtLastError());
-
+	time.push_back(clock());
 	/* perform boundary treatment */
 	TreatBoundary<<<grid,block>>>(*flag_field_d);
 	cudaErrorCheck(cudaPeekAtLastError());
@@ -392,8 +397,9 @@ void DoIteration(float *collide_field, float *stream_field, int *flag_field, flo
 	*mlups_sum += num_cells/(MLUPS_EXPONENT*(float)mlups_time/CLOCKS_PER_SEC);
 	if(VERBOSE)
 		printf("MLUPS: %f\n", num_cells/(MLUPS_EXPONENT*(float)mlups_time/CLOCKS_PER_SEC));
-
+	time.push_back(clock());
 	/* copy data back to host */
 	cudaErrorCheck(cudaMemcpyFromSymbol(collide_field_dd, collide_field_d, sizeof(*collide_field_dd), 0, cudaMemcpyDeviceToHost));
 	cudaErrorCheck(cudaMemcpyFromSymbol(stream_field_dd, stream_field_d, sizeof(*stream_field_dd), 0, cudaMemcpyDeviceToHost));
+	time.push_back(clock());
 }

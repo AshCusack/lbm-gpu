@@ -18,7 +18,7 @@
 
 int main(int argc, char *argv[]) {
 	float *collide_field=NULL, *stream_field=NULL, *collide_field_d=NULL, *stream_field_d=NULL,
-			*swap=NULL, tau, wall_velocity[D_LBM], num_cells, mlups_sum;
+			*swap=NULL, tau, wall_velocity[D_LBM], num_cells, mlups_sum=0;
 	int *flag_field=NULL, *flag_field_d=NULL, xlength, t, timesteps, timesteps_per_plotting,
 			gpu_enabled;
 	clock_t mlups_time;
